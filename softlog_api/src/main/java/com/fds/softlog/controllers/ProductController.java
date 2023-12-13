@@ -34,6 +34,11 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+        String productId = product.getId();
+        boolean exists = productService.existsById(productId);
+        if (exists) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         Product createdProduct = productService.createProduct(product);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
@@ -42,6 +47,19 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
         productService.deleteProduct(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> updateProduct(@PathVariable String id, @RequestBody Product updatedProduct) {
+        return productService.getProductById(id)
+                .map(product -> {
+                    product.setName(updatedProduct.getName());
+                    product.setPrice(updatedProduct.getPrice());
+                    product.setExpirationDate(updatedProduct.getExpirationDate());
+                    Product updated = productService.createProduct(product);
+                    return ResponseEntity.ok().body(updated);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
 }

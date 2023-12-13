@@ -23,6 +23,7 @@ public class ProductService {
     public Optional<Product> getProductById(String id) {
         return productRepository.findById(id);
     }
+    public boolean existsById(String id) { return productRepository.existsById(id); }
 
     public Product createProduct(Product product) {
         return productRepository.save(product);
@@ -31,6 +32,4 @@ public class ProductService {
     public void deleteProduct(String id) {
         productRepository.deleteById(id);
     }
-
-    // Add other methods as needed
 }
