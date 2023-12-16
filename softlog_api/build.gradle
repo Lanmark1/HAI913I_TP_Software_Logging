@@ -18,6 +18,9 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-log4j2' // Optional for Log4j2
+    implementation 'org.springframework.boot:spring-boot-starter-logging' // Remove this line if excluding Spring Boot's default logging
+    implementation 'ch.qos.logback:logback-classic:1.2.6' // Logback Classic module
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 

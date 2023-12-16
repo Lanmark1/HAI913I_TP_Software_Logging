@@ -1,6 +1,12 @@
 package com.fds.softlog.controllers;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fds.softlog.models.Product;
+import com.fds.softlog.models.User;
 import com.fds.softlog.services.ProductService;
+import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,21 +19,34 @@ import java.util.Optional;
 @RequestMapping("/api/products")
 public class ProductController {
     private final ProductService productService;
+    private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
 
+    ObjectMapper objectMapper = new ObjectMapper();
     @Autowired
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
+    public ResponseEntity<List<Product>> getAllProducts(HttpSession session) throws JsonProcessingException {
         List<Product> products = productService.getAllProducts();
+        logger.info("Products were shown.");
+        User user = (User) session.getAttribute("user");
+
+        if (user != null) {
+            String jsonUserData = objectMapper.writeValueAsString(user);
+            logger.info("User : " + jsonUserData);
+        }
+        else {
+            logger.info("no user found");
+        }
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable String id) {
         Optional<Product> product = productService.getProductById(id);
+        logger.info("Product with id {} retrieved.", id);
         return product.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

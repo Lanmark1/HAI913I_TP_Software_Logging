@@ -1,6 +1,7 @@
 package com.fds.softlog.controllers;
 import com.fds.softlog.models.User;
 import com.fds.softlog.services.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,10 +46,15 @@ public class UserController {
     }
 
     @GetMapping("/login")
-    public ResponseEntity<User> getUserByEmailAndPassword(@RequestParam String email, @RequestParam String password) {
+    public ResponseEntity<User> getUserByEmailAndPassword(@RequestParam String email, @RequestParam String password, HttpSession session) {
         Optional<User> User = userService.findByEmailAndPassword(email, password);
-        return User.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return User.map(value -> {
+                    session.setAttribute("user", value);
+                    return new ResponseEntity<>(value, HttpStatus.OK);
+                })
+                .orElseGet(() -> {
+                    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                });
     }
 
 }
