@@ -2,6 +2,7 @@ package com.fds.softlog.controllers;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fds.softlog.models.OperationTypes;
 import com.fds.softlog.models.Product;
 import com.fds.softlog.models.User;
 import com.fds.softlog.models.UserData;
@@ -34,10 +35,10 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() throws JsonProcessingException {
+    public ResponseEntity<List<Product>> getAllProducts() {
         List<Product> products = productService.getAllProducts();
         logger.info("Products were shown.");
-        findUserAndLogOperation(true);
+        findUserAndLogOperation(OperationTypes.READ);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
@@ -45,7 +46,7 @@ public class ProductController {
     public ResponseEntity<Product> getProductById(@PathVariable String id) {
         Optional<Product> product = productService.getProductById(id);
         logger.info("Product with id {} retrieved.", id);
-        findUserAndLogOperation(true);
+        findUserAndLogOperation(OperationTypes.READ);
         return product.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -55,7 +56,7 @@ public class ProductController {
         Product createdProduct = productService.createProduct(product);
         String productId = createdProduct.getId();
         logger.info("Product with id {} created.", productId);
-        findUserAndLogOperation(false);
+        findUserAndLogOperation(OperationTypes.CREATE);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
 
@@ -63,14 +64,14 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
         productService.deleteProduct(id);
         logger.info("Product with id {} deleted.", id);
-        findUserAndLogOperation(false);
+        findUserAndLogOperation(OperationTypes.DELETE);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable String id, @RequestBody Product updatedProduct) {
         logger.info("Product with id {} updated.", id);
-        findUserAndLogOperation(false);
+        findUserAndLogOperation(OperationTypes.UPDATE);
         return productService.getProductById(id)
                 .map(product -> {
                     product.setName(updatedProduct.getName());
@@ -83,21 +84,19 @@ public class ProductController {
     }
 
     /**
-     * @param read determines if the operation is read or write (true for read, false for write)
+     * @param type determines the type of CRUD operation we are performing
      */
-    private void findUserAndLogOperation(boolean read) {
-        // if read is true we increment the readOperations attribute,
-        // and otherwise we increment writeOperations
+    private void findUserAndLogOperation(OperationTypes type) {
         User user = (User) session.getAttribute("user");
         if (user != null) {
             Optional<UserData> userData = userService.getUserDataById(user.getId());
             userData.ifPresentOrElse(
                 data -> {
-                    if (read) {
-                        data.setReadOperations(data.getReadOperations() + 1);
-                    }
-                    else {
-                        data.setWriteOperations(data.getWriteOperations() + 1);
+                    switch (type) {
+                        case CREATE -> data.setCreateOperations(data.getCreateOperations() + 1);
+                        case READ -> data.setReadOperations(data.getReadOperations() + 1);
+                        case UPDATE -> data.setUpdateOperations(data.getUpdateOperations() + 1);
+                        case DELETE -> data.setDeleteOperations(data.getDeleteOperations() + 1);
                     }
                     userService.createUserData(data);
                     try {
@@ -108,17 +107,13 @@ public class ProductController {
                     }
                 },
                 () -> {
-                    UserData newData = new UserData();
-                    newData.setUser(user);
-                    if (read) {
-                        newData.setReadOperations(1);
-                        newData.setWriteOperations(0);
+                    UserData newData = new UserData(user);
+                    switch (type) {
+                        case CREATE -> newData.setCreateOperations(1);
+                        case READ -> newData.setReadOperations(1);
+                        case UPDATE -> newData.setUpdateOperations(1);
+                        case DELETE -> newData.setDeleteOperations(1);
                     }
-                    else {
-                        newData.setReadOperations(0);
-                        newData.setWriteOperations(1);
-                    }
-                    newData.setId(user.getId());
                     userService.createUserData(newData);
                     try {
                         String jsonUserData = objectMapper.writeValueAsString(newData);
