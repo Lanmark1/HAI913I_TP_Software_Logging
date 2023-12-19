@@ -2,19 +2,22 @@ package com.fds.softlog.controllers;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fds.softlog.models.OperationTypes;
-import com.fds.softlog.models.Product;
-import com.fds.softlog.models.User;
-import com.fds.softlog.models.UserData;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fds.softlog.models.*;
 import com.fds.softlog.services.ProductService;
 import com.fds.softlog.services.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,12 +29,14 @@ public class ProductController {
     private static final Logger logger = (Logger) LoggerFactory.getLogger(ProductController.class);
     private final HttpSession session;
 
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper;
     @Autowired
     public ProductController(ProductService productService, UserService userService, HttpSession session) {
         this.productService = productService;
         this.userService = userService;
         this.session = session;
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
     }
 
     @GetMapping
@@ -46,7 +51,7 @@ public class ProductController {
     public ResponseEntity<Product> getProductById(@PathVariable String id) {
         Optional<Product> product = productService.getProductById(id);
         logger.info("Product with id {} retrieved.", id);
-        findUserAndLogOperation(OperationTypes.READ);
+        product.ifPresent(data -> findUserAndLogOperation(OperationTypes.READ, data));
         return product.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -86,7 +91,7 @@ public class ProductController {
     /**
      * @param type determines the type of CRUD operation we are performing
      */
-    private void findUserAndLogOperation(OperationTypes type) {
+    private void findUserAndLogOperation(OperationTypes type, Product product) {
         User user = (User) session.getAttribute("user");
         if (user != null) {
             Optional<UserData> userData = userService.getUserDataById(user.getId());
@@ -94,39 +99,55 @@ public class ProductController {
                 data -> {
                     switch (type) {
                         case CREATE -> data.setCreateOperations(data.getCreateOperations() + 1);
-                        case READ -> data.setReadOperations(data.getReadOperations() + 1);
+                        case READ -> {
+                            if (product != null) {
+                                ZoneId zoneId = ZoneId.of("Europe/Paris");
+                                SearchedProduct searchedProduct = new SearchedProduct(product, LocalDateTime.now(zoneId));
+                                data.getSearchedProducts().add(searchedProduct);
+                            }
+                            data.setReadOperations(data.getReadOperations() + 1);
+                        }
                         case UPDATE -> data.setUpdateOperations(data.getUpdateOperations() + 1);
                         case DELETE -> data.setDeleteOperations(data.getDeleteOperations() + 1);
                     }
                     userService.createUserData(data);
-                    try {
-                        String jsonUserData = objectMapper.writeValueAsString(data);
-                        logger.info(jsonUserData);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
                 },
                 () -> {
                     UserData newData = new UserData(user);
                     switch (type) {
                         case CREATE -> newData.setCreateOperations(1);
-                        case READ -> newData.setReadOperations(1);
+                        case READ -> {
+                            if (product != null) {
+                                ZoneId zoneId = ZoneId.of("Europe/Paris");
+                                SearchedProduct searchedProduct = new SearchedProduct(product, LocalDateTime.now(zoneId));
+                                newData.getSearchedProducts().add(searchedProduct);
+                            }
+                            newData.setReadOperations(1);
+                        }
                         case UPDATE -> newData.setUpdateOperations(1);
                         case DELETE -> newData.setDeleteOperations(1);
                     }
                     userService.createUserData(newData);
-                    try {
-                        String jsonUserData = objectMapper.writeValueAsString(newData);
-                        logger.info(jsonUserData);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
                 });
+            try {
+                String jsonUser = objectMapper.writeValueAsString(user);
+                StringBuilder sb = new StringBuilder();
+                sb.append("user : ")
+                        .append(jsonUser)
+                        .append(", action : ")
+                        .append(type.getName());
+                logger.info(sb.toString());
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         }
         else {
             logger.info("No user found");
         }
+    }
 
+    private void findUserAndLogOperation(OperationTypes type) {
+        findUserAndLogOperation(type, null);
     }
 
 }

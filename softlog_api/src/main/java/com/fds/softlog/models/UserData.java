@@ -1,6 +1,13 @@
 package com.fds.softlog.models;
 
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.util.Pair;
+
+import java.time.LocalDate;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Document(collection = "users_data")
 public class UserData {
@@ -11,6 +18,9 @@ public class UserData {
     private int readOperations;
     private int updateOperations;
     private int deleteOperations;
+//    private List<Pair<Product, LocalDate>> searchedProducts;
+    private List<SearchedProduct> searchedProducts;
+
 
     public String getId() {
         return id;
@@ -23,6 +33,7 @@ public class UserData {
         this.readOperations = 0;
         this.updateOperations = 0;
         this.deleteOperations = 0;
+        this.searchedProducts = new ArrayList<>();
     }
 
     public void setId(String id) {
@@ -68,4 +79,20 @@ public class UserData {
     public void setDeleteOperations(int deleteOperations) {
         this.deleteOperations = deleteOperations;
     }
+
+    public List<SearchedProduct> getSearchedProducts() {
+        return searchedProducts;
+    }
+
+    public void setSearchedProducts(List<SearchedProduct> searchedProducts) {
+        this.searchedProducts = searchedProducts;
+    }
+
+    //    public List<Pair<Product, LocalDate>> getSearchedProducts() {
+//        return searchedProducts;
+//    }
+//
+//    public void setSearchedProducts(List<Pair<Product, LocalDate>> searchedProducts) {
+//        this.searchedProducts = searchedProducts;
+//    }
 }
