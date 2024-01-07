@@ -1,6 +1,5 @@
 package com.fds.softlog.controllers;
 import ch.qos.logback.classic.Logger;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fds.softlog.models.*;
@@ -9,17 +8,14 @@ import com.fds.softlog.services.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Optional;
+import java.time.*;
+import java.util.*;
+
+import static net.logstash.logback.argument.StructuredArguments.entries;
 
 @RestController
 @RequestMapping("/api/products")
@@ -42,7 +38,6 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts() {
         List<Product> products = productService.getAllProducts();
-        logger.info("Products were shown.");
         findUserAndLogOperation(OperationTypes.READ);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
@@ -50,7 +45,6 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable String id) {
         Optional<Product> product = productService.getProductById(id);
-        logger.info("Product with id {} retrieved.", id);
         product.ifPresent(data -> findUserAndLogOperation(OperationTypes.READ, data));
         return product.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -59,8 +53,6 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
         Product createdProduct = productService.createProduct(product);
-        String productId = createdProduct.getId();
-        logger.info("Product with id {} created.", productId);
         findUserAndLogOperation(OperationTypes.CREATE);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
@@ -68,14 +60,12 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
         productService.deleteProduct(id);
-        logger.info("Product with id {} deleted.", id);
         findUserAndLogOperation(OperationTypes.DELETE);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable String id, @RequestBody Product updatedProduct) {
-        logger.info("Product with id {} updated.", id);
         findUserAndLogOperation(OperationTypes.UPDATE);
         return productService.getProductById(id)
                 .map(product -> {
@@ -102,7 +92,8 @@ public class ProductController {
                         case READ -> {
                             if (product != null) {
                                 ZoneId zoneId = ZoneId.of("Europe/Paris");
-                                SearchedProduct searchedProduct = new SearchedProduct(product, LocalDateTime.now(zoneId));
+                                Instant now = Instant.now();
+                                SearchedProduct searchedProduct = new SearchedProduct(product, ZonedDateTime.ofInstant(now, zoneId).toLocalDateTime());
                                 data.getSearchedProducts().add(searchedProduct);
                             }
                             data.setReadOperations(data.getReadOperations() + 1);
@@ -119,7 +110,8 @@ public class ProductController {
                         case READ -> {
                             if (product != null) {
                                 ZoneId zoneId = ZoneId.of("Europe/Paris");
-                                SearchedProduct searchedProduct = new SearchedProduct(product, LocalDateTime.now(zoneId));
+                                Instant now = Instant.now();
+                                SearchedProduct searchedProduct = new SearchedProduct(product, ZonedDateTime.ofInstant(now, zoneId).toLocalDateTime());
                                 newData.getSearchedProducts().add(searchedProduct);
                             }
                             newData.setReadOperations(1);
@@ -129,20 +121,20 @@ public class ProductController {
                     }
                     userService.createUserData(newData);
                 });
-            try {
-                String jsonUser = objectMapper.writeValueAsString(user);
-                StringBuilder sb = new StringBuilder();
-                sb.append("user : ")
-                        .append(jsonUser)
-                        .append(", action : ")
-                        .append(type.getName());
-                logger.info(sb.toString());
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+                Map<String, Object> map = new HashMap<>();
+                map.put("user", user);
+                map.put("action", type.getName());
+                if (product != null)
+                    map.put("searchedProduct", product);
+                logger.info("{}", entries(map));
         }
         else {
-            logger.info("No user found");
+            Map<String, Object> map = new HashMap<>();
+            map.put("user", null);
+            map.put("action", type.getName());
+            if (product != null)
+                map.put("searchedProduct", product);
+            logger.info("{}", entries(map));
         }
     }
 
