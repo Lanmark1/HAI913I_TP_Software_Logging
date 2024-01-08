@@ -25,14 +25,78 @@ public class UserCLI {
     static final String apiProductsUrl = "http://localhost:8080/api/products";
     static final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
+    static boolean exit = false;
+    static boolean logged = false;
 
     public static void main(String[] args) throws InterruptedException {
-        boolean exit = false;
-        boolean logged = false;
+
+        loginOrCreateAccount();
+
+        while (!exit) {
+            Thread.sleep(2000);
+            System.out.println("Select an option:");
+            System.out.println("1. Display products");
+            System.out.println("2. Fetch a product by ID");
+            System.out.println("3. Add a new product");
+            System.out.println("4. Delete a product by ID");
+            System.out.println("5. Update a product's info");
+            System.out.println("6. Log out");
+            System.out.println("7. Exit");
+
+            try {
+                int choice = Integer.parseInt(reader.readLine());
+
+                switch (choice) {
+                    case 1:
+                        displayProducts();
+                        break;
+                    case 2:
+                        fetchProductByID();
+                        break;
+                    case 3:
+                        addNewProduct();
+                        break;
+                    case 4:
+                        deleteProductByID();
+                        break;
+                    case 5:
+                        updateProductInfo();
+                        break;
+                    case 6:
+                        logged = false;
+                        loginOrCreateAccount();
+                        break;
+                    case 7:
+                        exit = true;
+                        System.out.println("Exiting the application...");
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Please select a valid option.");
+                }
+            } catch (IOException | NumberFormatException e) {
+                System.err.println("Invalid input. Please enter a valid number.");
+            }
+            catch (ProductNotFoundException e) {
+                System.err.println("Product was not found.");
+            }
+            catch (ProductCreationException e) {
+                System.err.println("Product already exists or request wasn't correctly formed.");
+            }
+        }
+
+        try {
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void loginOrCreateAccount() {
         while (!logged) {
             System.out.println("Select an option:");
             System.out.println("1. Log in to a user account");
             System.out.println("2. Create a user");
+            System.out.println("3. Exit");
             try {
                 int choice = Integer.parseInt(reader.readLine());
                 switch (choice) {
@@ -59,59 +123,6 @@ public class UserCLI {
             } catch (IOException | NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a valid number.");
             }
-        }
-
-        while (!exit) {
-            Thread.sleep(2000);
-            System.out.println("Select an option:");
-            System.out.println("1. Display products");
-            System.out.println("2. Fetch a product by ID");
-            System.out.println("3. Add a new product");
-            System.out.println("4. Delete a product by ID");
-            System.out.println("5. Update a product's info");
-            System.out.println("6. Exit");
-
-            try {
-                int choice = Integer.parseInt(reader.readLine());
-
-                switch (choice) {
-                    case 1:
-                        displayProducts();
-                        break;
-                    case 2:
-                        fetchProductByID();
-                        break;
-                    case 3:
-                        addNewProduct();
-                        break;
-                    case 4:
-                        deleteProductByID();
-                        break;
-                    case 5:
-                        updateProductInfo();
-                        break;
-                    case 6:
-                        exit = true;
-                        System.out.println("Exiting the application...");
-                        break;
-                    default:
-                        System.out.println("Invalid choice. Please select a valid option.");
-                }
-            } catch (IOException | NumberFormatException e) {
-                System.err.println("Invalid input. Please enter a valid number.");
-            }
-            catch (ProductNotFoundException e) {
-                System.err.println("Product was not found.");
-            }
-            catch (ProductCreationException e) {
-                System.err.println("Product already exists or request wasn't correctly formed.");
-            }
-        }
-
-        try {
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
