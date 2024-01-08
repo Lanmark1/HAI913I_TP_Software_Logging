@@ -9,7 +9,7 @@ const LogComponent = ({ retrievedUsers, userType }) => {
 
     return (
         <div>
-            <h2>Users with the {userType}</h2>
+            <h2>{userType}</h2>
             {retrievedUsers.map((user, index) => (
                 <div key={index}>
                     <p>{user}</p>

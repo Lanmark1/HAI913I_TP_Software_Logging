@@ -60,3 +60,41 @@ body {
   border-radius: 20pt;
   padding: 20px;
 }
+
+.button {
+  border-radius: 20pt;
+  height: fit-content(140%);
+
+}
+
+.BUTTON_HOF {
+  background: #61DAFB -webkit-linear-gradient(#61DAFB, #1E62D0);
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  border-radius: 20px;
+  padding: 40px;
+  font-size: calc(10px + 1vmin);
+  color: aliceblue;
+  -webkit-box-shadow: 1px 1px 20px 0 #000000;
+  -moz-box-shadow: 1px 1px 20px 0 #000000;
+  box-shadow: 1px 1px 20px 0 #000000;
+  text-shadow: 1px 1px 20px #000000;
+  border: solid #337FED 1px;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  text-align: center;
+}
+
+.BUTTON_HOF:hover {
+  border: solid #337FED 1px;
+  background: #1E62D0 -webkit-linear-gradient(#1E62D0, #3D94F6);
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  border-radius: 20px;
+  text-decoration: none;
+}
+
+.space {
+  margin-bottom: 2cm;
+}
