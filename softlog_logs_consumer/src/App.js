@@ -3,20 +3,28 @@ import './App.css';
 
 import React, { useEffect, useState } from 'react';
 import MostReadsComponent from './Components/MostReadsComponent';
-import {buildUserProfiles, mostWrites, mostReads, mostExpensiveProductSearched, mostSearchedProducts} from "./Controllers/UserProfilesController";
+import {
+    buildUserProfiles,
+    mostWrites,
+    mostReads,
+    mostExpensiveProductSearched,
+    mostSearchedProducts,
+    convertDistantToLocalFormat
+} from "./Controllers/UserProfilesController";
 import axios from 'axios';
 import MostWritesComponent from "./Components/MostWritesComponent";
+import MostExpensiveProductsComponent from "./Components/MostExpensiveProductsComponent";
+import MostSearchedProductsComponent from "./Components/MostSearchedProductsComponent";
 
-// console.log(data);
 const App = () => {
-    const [dbData, setDistantData] = useState([]);
-    const [localData, setLocalData] = useState([]);
-    const [userProfiles, setUserProfiles] = useState([]);
     const [userProfilesArr, setUserProfilesArr] = useState([]);
     const fetchDistantData = () => {
         axios.get('http://localhost:8080/api/users/data')
             .then(response => {
-                setDistantData(response.data); // Update fetched data in state
+                console.log("distant");
+                console.log(convertDistantToLocalFormat(response.data));
+                setUserProfilesArr(convertDistantToLocalFormat(response.data));
+
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
@@ -31,21 +39,14 @@ const App = () => {
                 for (const line of text.split("\n").filter(e => e !== "")) {
                     lines.push(JSON.parse(line));
                 }
-                setLocalData(lines);
-                let tmpUsersProfiles = buildUserProfiles(lines);
-                setUserProfiles(tmpUsersProfiles);
+                let userProfiles = buildUserProfiles(lines);
+                console.log("local");
+                console.log(Object.entries(userProfiles));
                 setUserProfilesArr(Object.entries(userProfiles));
-                const lol = Object.entries(userProfiles);
-                console.log(mostWrites(lol));
-                console.log(mostReads(lol));
-                console.log(mostExpensiveProductSearched(lol));
-                console.log(mostSearchedProducts(lol));
-                // console.log(mostWrites(userProfiles));
             })
     };
 
     useEffect(() => {
-        // Initial data fetch when component mounts
         fetchLocalData();
     }, []);
 
@@ -53,11 +54,9 @@ const App = () => {
         <div className="App">
             <img src={logo} className="App-logo" alt="logo" width="300" height="300"/>
             <h1>Log Display App</h1>
-            {/*{JSON.stringify(userProfiles)}*/}
-            {/*{JSON.stringify(dbData)}*/}
             <div className="center space">
-                <button className="BUTTON_HOF" onClick={fetchLocalData}>Fetch Local Data</button>
-                <button className="BUTTON_HOF" onClick={fetchDistantData}>Fetch Distant Data</button>
+                <button className="BUTTON_HOF" onClick={fetchLocalData}>Use data from the local logs</button>
+                <button className="BUTTON_HOF" onClick={fetchDistantData}>Use data from the API</button>
             </div>
             <div className="card-container">
                 <div className="card">
@@ -66,12 +65,12 @@ const App = () => {
                 <div className="card">
                     <MostWritesComponent retrievedUsers={mostWrites(userProfilesArr)} userType={'Users with the most write operations'}/>
                 </div>
-                {/*<div className="card">*/}
-                {/*    <MostReadsComponent retrievedUsers={mostExpensiveProductSearched(userProfilesArr)} userType={'Users that searched most expensive products'}/>*/}
-                {/*</div>*/}
-                {/*<div className="card">*/}
-                {/*    <MostReadsComponent retrievedUsers={mostSearchedProducts(userProfilesArr)} userType={'Most searched products by users'}/>*/}
-                {/*</div>*/}
+                <div className="card">
+                    <MostExpensiveProductsComponent retrievedUsers={mostExpensiveProductSearched(userProfilesArr)} userType={'Users that searched most expensive products'}/>
+                </div>
+                <div className="card">
+                    <MostSearchedProductsComponent retrievedProducts={mostSearchedProducts(userProfilesArr)} userType={'Most searched products by users'}/>
+                </div>
             </div>
         </div>
     );

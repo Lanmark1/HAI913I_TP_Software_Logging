@@ -20,11 +20,39 @@ export function buildUserProfiles(lines) {
                 };
             }
             tmpUsersProfiles[line.user.id][dictNames[line.action]] += 1;
-            if (line.searchedProduct)
-                tmpUsersProfiles[line.user.id].searchedProducts.push(/*[*/line.searchedProduct);//, new Date(line.timestamp)]);
+            if (line.searchedProduct) {
+                let prod = structuredClone(line.searchedProduct);
+                prod["timestamp"] = line.timestamp;
+                tmpUsersProfiles[line.user.id].searchedProducts.push(prod);
+            }
         }
     }
     return tmpUsersProfiles;
+}
+
+export function convertDistantToLocalFormat(distantDataProfiles) {
+    let profilesArray = [];
+    for (const profile of distantDataProfiles) {
+        let products = [];
+        for (const product of profile.searchedProducts) {
+            products.push({
+                expirationDate : product.product.expirationDate,
+                id : product.product.id,
+                name : product.product.name,
+                price : product.product.price,
+                timestamp : product.timestamp,
+            })
+        }
+        profilesArray.push([profile.id, {
+            createOperations : profile.createOperations,
+            deleteOperations : profile.deleteOperations,
+            updateOperations : profile.updateOperations,
+            readOperations : profile.readOperations,
+            searchedProducts : structuredClone(products),
+            user : structuredClone(profile.user),
+        }]);
+    }
+    return profilesArray;
 }
 
 export function mostWrites(userProfilesArr) { // [0] : key, [1] : usable user info

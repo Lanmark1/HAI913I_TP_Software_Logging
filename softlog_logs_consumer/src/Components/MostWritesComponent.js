@@ -8,11 +8,16 @@ const MostWritesComponent = ({ retrievedUsers, userType }) => {
         <div>
             <h2 className="card-title">{userType}</h2>
             {
-                retrievedUsers.map((userProf, index) => (
-                <div key={index}>
-                    <p>{userProf[1].user.name} (created : {userProf[1].createOperations}, updated : {userProf[1].updateOperations}, deleted : {userProf[1].deleteOperations})</p>
-                </div>
-                ))
+                retrievedUsers.map((userProf, index) => {
+                    if (userProf[1].createOperations !== 0 ||
+                        userProf[1].updateOperations !== 0 ||
+                        userProf[1].deleteOperations !== 0)
+                    return(
+                        <div key={index}>
+                            <p>{userProf[1].user.name} (created : {userProf[1].createOperations}, updated
+                                : {userProf[1].updateOperations}, deleted : {userProf[1].deleteOperations})</p>
+                        </div>);
+                })
             }
         </div>
     );

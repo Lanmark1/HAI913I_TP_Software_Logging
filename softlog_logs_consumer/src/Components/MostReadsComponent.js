@@ -9,11 +9,13 @@ const MostReadsComponent = ({ retrievedUsers, userType }) => {
         <div>
             <h2 className="card-title">{userType}</h2>
             {
-                retrievedUsers.map((userProf, index) => (
-                    <div key={index}>
-                        <p>{userProf[1].user.name} (read : {userProf[1].readOperations})</p>
-                    </div>
-                ))
+                retrievedUsers.map((userProf, index) => {
+                    if (userProf[1].readOperations !== 0)
+                        return(
+                        <div key={index}>
+                            <p>{userProf[1].user.name} (read : {userProf[1].readOperations})</p>
+                        </div>);
+                })
             }
         </div>
     );
