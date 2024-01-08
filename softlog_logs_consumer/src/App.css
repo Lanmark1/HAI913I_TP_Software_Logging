@@ -46,9 +46,18 @@ body {
     transform: rotate(360deg);
   }
 }
-
+.card-title {
+  margin-bottom: 20px;
+}
 
 .card-container {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.center {
   display: flex;
   justify-content: center;
   gap: 20px;
@@ -57,6 +66,7 @@ body {
 .card {
   width: 300px;
   border: 1px solid aliceblue;
+  vertical-align: center;
   border-radius: 20pt;
   padding: 20px;
 }

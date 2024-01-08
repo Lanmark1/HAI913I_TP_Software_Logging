@@ -2,15 +2,17 @@ import logo from './logo.svg';
 import './App.css';
 
 import React, { useEffect, useState } from 'react';
-import LogComponent from './Components/LogComponent';
+import MostReadsComponent from './Components/MostReadsComponent';
+import {buildUserProfiles, mostWrites, mostReads, mostExpensiveProductSearched, mostSearchedProducts} from "./Controllers/UserProfilesController";
 import axios from 'axios';
+import MostWritesComponent from "./Components/MostWritesComponent";
 
 // console.log(data);
 const App = () => {
-    const logs = ["user 1", "user 2"];
     const [dbData, setDistantData] = useState([]);
     const [localData, setLocalData] = useState([]);
     const [userProfiles, setUserProfiles] = useState([]);
+    const [userProfilesArr, setUserProfilesArr] = useState([]);
     const fetchDistantData = () => {
         axios.get('http://localhost:8080/api/users/data')
             .then(response => {
@@ -30,37 +32,22 @@ const App = () => {
                     lines.push(JSON.parse(line));
                 }
                 setLocalData(lines);
+                let tmpUsersProfiles = buildUserProfiles(lines);
+                setUserProfiles(tmpUsersProfiles);
+                setUserProfilesArr(Object.entries(userProfiles));
+                const lol = Object.entries(userProfiles);
+                console.log(mostWrites(lol));
+                console.log(mostReads(lol));
+                console.log(mostExpensiveProductSearched(lol));
+                console.log(mostSearchedProducts(lol));
+                // console.log(mostWrites(userProfiles));
             })
     };
 
-    const dictNames = {
-        "READ" : "readOperations",
-        "CREATE" : "createOperations",
-        "UPDATE" : "updateOperations",
-        "DELETE" : "deleteOperations",
-    };
-    const buildUserProfiles = async () => {
-        await fetchLocalData();
-        let tmpUsersProfiles = {};
-        for (const line of localData) {
-            if (line.user) {
-                if (!tmpUsersProfiles[line.user.id]) {
-                    tmpUsersProfiles[line.user.id] = {
-                        'searchedProducts' : [],
-                        'user' : structuredClone(line.user),
-                        'readOperations' : 0,
-                        'updateOperations' : 0,
-                        'createOperations' : 0,
-                        'deleteOperations' : 0
-                    };
-                }
-                tmpUsersProfiles[line.user.id][dictNames[line.action]] += 1;
-                if (line.searchedProduct)
-                    tmpUsersProfiles[line.user.id].searchedProducts.push(/*[*/line.searchedProduct);//, new Date(line.timestamp)]);
-            }
-        }
-        setUserProfiles(tmpUsersProfiles);
-    }
+    useEffect(() => {
+        // Initial data fetch when component mounts
+        fetchLocalData();
+    }, []);
 
     return (
         <div className="App">
@@ -68,23 +55,23 @@ const App = () => {
             <h1>Log Display App</h1>
             {/*{JSON.stringify(userProfiles)}*/}
             {/*{JSON.stringify(dbData)}*/}
-            <div className="card-container space">
-                <button className="BUTTON_HOF" onClick={buildUserProfiles}>Fetch Local Data</button>
+            <div className="center space">
+                <button className="BUTTON_HOF" onClick={fetchLocalData}>Fetch Local Data</button>
                 <button className="BUTTON_HOF" onClick={fetchDistantData}>Fetch Distant Data</button>
             </div>
             <div className="card-container">
                 <div className="card">
-                    <LogComponent retrievedUsers={logs} userType={'Users with the most read operations'}/>
+                    <MostReadsComponent retrievedUsers={mostReads(userProfilesArr)} userType={'Users with the most read operations'}/>
                 </div>
                 <div className="card">
-                    <LogComponent retrievedUsers={logs} userType={'Users with the most write operations'}/>
+                    <MostWritesComponent retrievedUsers={mostWrites(userProfilesArr)} userType={'Users with the most write operations'}/>
                 </div>
-                <div className="card">
-                    <LogComponent retrievedUsers={logs} userType={'Users that have searched the most expensive products'}/>
-                </div>
-                <div className="card">
-                    <LogComponent retrievedUsers={logs} userType={'Most searched products'}/>
-                </div>
+                {/*<div className="card">*/}
+                {/*    <MostReadsComponent retrievedUsers={mostExpensiveProductSearched(userProfilesArr)} userType={'Users that searched most expensive products'}/>*/}
+                {/*</div>*/}
+                {/*<div className="card">*/}
+                {/*    <MostReadsComponent retrievedUsers={mostSearchedProducts(userProfilesArr)} userType={'Most searched products by users'}/>*/}
+                {/*</div>*/}
             </div>
         </div>
     );
