@@ -13,6 +13,7 @@
             <timestampPattern>yyyy-MM-dd'T'HH:mm:ss</timestampPattern>
             <fieldNames>
                 <timestamp>timestamp</timestamp>
+                <message>[ignore]</message>
                 <logger>[ignore]</logger>
                 <version>[ignore]</version>
                 <levelValue>[ignore]</levelValue>
