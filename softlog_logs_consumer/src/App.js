@@ -21,7 +21,9 @@ const App = () => {
     const fetchDistantData = () => {
         axios.get('http://localhost:8080/api/users/data')
             .then(response => {
-                console.log("distant");
+                console.log("distant (before treatment)");
+                console.log(response.data);
+                console.log("distant (after treatment)");
                 console.log(convertDistantToLocalFormat(response.data));
                 setUserProfilesArr(convertDistantToLocalFormat(response.data));
 
@@ -47,13 +49,14 @@ const App = () => {
     };
 
     useEffect(() => {
+        document.title = "Logs Consumer App"
         fetchLocalData();
     }, []);
 
     return (
         <div className="App">
             <img src={logo} className="App-logo" alt="logo" width="300" height="300"/>
-            <h1>Log Display App</h1>
+            {/*<h1>Log Consumer App</h1>*/}
             <div className="center space">
                 <button className="BUTTON_HOF" onClick={fetchLocalData}>Use data from the local logs</button>
                 <button className="BUTTON_HOF" onClick={fetchDistantData}>Use data from the API</button>
@@ -66,7 +69,7 @@ const App = () => {
                     <MostWritesComponent retrievedUsers={mostWrites(userProfilesArr)} userType={'Users with the most write operations'}/>
                 </div>
                 <div className="card">
-                    <MostExpensiveProductsComponent retrievedUsers={mostExpensiveProductSearched(userProfilesArr)} userType={'Users that searched most expensive products'}/>
+                    <MostExpensiveProductsComponent retrievedUsers={mostExpensiveProductSearched(userProfilesArr)} userType={'Users that searched the most expensive products'}/>
                 </div>
                 <div className="card">
                     <MostSearchedProductsComponent retrievedProducts={mostSearchedProducts(userProfilesArr)} userType={'Most searched products by users'}/>
