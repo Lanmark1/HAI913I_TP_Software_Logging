@@ -21,7 +21,7 @@
   ``` 
   java -jar ./softlog_cli/softlog_cli.jar
   ``` 
-  - Lancer l'application front-end
+  - Lancer l'application consommatrice des logs
   ```
   cd softlog_logs_consumer
   npm install
